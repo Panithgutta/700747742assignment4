@@ -1,42 +1,25 @@
-# mymodule.py
+import boto3
+import yaml
 
-import configparser
+with open('config.yaml') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
 
-# Read configuration file
-config = configparser.ConfigParser()
-config.read('config.ini')
+sns_topic_name = config['sns_topic_name']
+email_address_1 = config['email_address_1']
+email_address_2 = config['email_address_2']
+sns_client = boto3.client('sns')
 
-# Get topic name and email addresses
-topic_name = config.get('Settings', 'topic')
-email_address1 = config.get('Settings', 'email_address1')
-email_address2 = config.get('Settings', 'email_address2')
+response = sns_client.create_topic(Name=sns_topic_name)
 
-# Define a function that uses the configuration values
-def my_function():
-    print('Topic name:', topic_name)
-    print('Email address 1:', email_address1)
-    print('Email address 2:', email_address2)
-
-
-# Create SNS client
-sns = boto3.client('sns')
-
-# Create SNS topic
-response = sns.create_topic(Name=topic_name)
-topic_arn = response['TopicArn']
-
-# Configure email addresses as subscribers
-sns.subscribe(
-    TopicArn=topic_arn,
+sns_topic_arn = response['TopicArn']
+sns_client.subscribe(
+    TopicArn=sns_topic_arn,
     Protocol='email',
-    Endpoint=email_address1
+    Endpoint=email_address_1
 )
 
-sns.subscribe(
-    TopicArn=topic_arn,
+sns_client.subscribe(
+    TopicArn=sns_topic_arn,
     Protocol='email',
-    Endpoint=email_address2
+    Endpoint=email_address_2
 )
-
-print('SNS topic created with name:', topic_name)
-print('Email addresses configured as subscribers:', email_address1, email_address2)
